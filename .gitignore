@@ -2,7 +2,6 @@
 /.recommenders
 /VOICE Parser/bin
 /VOICE Parser/lib
-/VOICE Parser/models
 /VOICE Parser/measurementUnites.csv
 /VOICE Parser/P1_Bickles2006.txt
 /VOICE Parser/listOfActions.txt

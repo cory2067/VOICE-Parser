@@ -13,7 +13,16 @@ public class VOICEParser
 		{
 			System.out.println(key + ": " + tagged.get(key));
 		}*/
-		String[] s = TaggingModel.getSentences("2.3 million people suffer from Disease X. Mr. Scientist has discovered a new cure. The results of the study will be released on Nov. 25.");
+		/**
+		 * categories:
+		 * 
+		 * challenge
+		 * innovation
+		 * features
+		 * opportunity
+		 * application
+		 */
+		String[] s = TaggingModel.getSentences("Mr. Memer discovered a cure for disease. It will be realeased on Nov. 24. It is version 3.5.");
 		for(String sent : s)
 		{
 			System.out.println("S: " + sent);
