@@ -51,27 +51,14 @@ public class VOICEParser
 	
 		for(int a = 0; a < sentences.length; a++)
 		{
-			sents[a] = new Sentence(sentences[a]);
+			sents[a] = new Sentence(sentences[a],
+					classificationME.categorize(sentences[a]));
 		}
 		
 		String[] categories = {"opportunity", "features", "innovation", "challenge", "application"};
+		
 		for(String cat : categories)
 		{
-			for(int a = 0; a < sents.length; a++)
-			{
-				if(sents[a] == null)
-					continue;
-				
-				String s = sents[a].content;
-			  double[] classDistribution = classificationME.categorize(s);
-			  //String predictedCategory = classificationME.getBestCategory(classDistribution);
-			  
-			  //System.out.println("Sentence:\n"+s);  
-			  //System.out.println(classificationME.getAllResults(classDistribution));
-			  //System.out.println("Model prediction : " + predictedCategory);
-			  sents[a].vals = classDistribution;
-			}
-			
 			double max = -1.0;
 			int best = -1;
 			for(int a = 0; a < sents.length; a++)

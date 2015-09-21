@@ -3,9 +3,9 @@ public class Sentence {
 	public String content;
 	public double[] vals;
 	
-	public Sentence(String text)
+	public Sentence(String text, double[] values)
 	{
 		content = text;
-		vals = new double[4];
+		vals = values;
 	}
 }
