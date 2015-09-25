@@ -1,17 +1,25 @@
 import opennlp.tools.doccat.DoccatModel;
 import opennlp.tools.doccat.DocumentCategorizerME;
+import opennlp.tools.namefind.NameFinderME;
+import opennlp.tools.namefind.TokenNameFinderModel;
 import opennlp.tools.sentdetect.SentenceDetectorME;
 import opennlp.tools.sentdetect.SentenceModel;
+import opennlp.tools.tokenize.Tokenizer;
+import opennlp.tools.tokenize.TokenizerME;
+import opennlp.tools.tokenize.TokenizerModel;
+import opennlp.tools.util.Span;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.Arrays;
 
 /** 
  * @author Cory Lynch
  */
 public class VOICEParser 
 {
-	private static final double keywordBiasFactor = 0.05;
+	private static final double keywordBiasFactor = 0.08;
 	
 	private static final String[] 
 			opportunity = {"$", "dollars", "million", "market"},
@@ -27,11 +35,64 @@ public class VOICEParser
 			
 	public static void main(String[] args)
 	{
-		categorize("Although peptides have shown some promise in clinical trials as therapeutic agents, their success has largely been limited by several factors, including rapid degradation by peptidases, poor cell permeability, and a lack of binding specificity resulting from conformational inflexibility. Science has overcome these limitations with the advance of peptidomimetics--a system for the production of modified chemical compounds capable of mimicking the structural and or functional properties of peptides. A fertile ground for such efforts lies in the discovery of ligands for nervous system receptors that mediate the sensation of pain. Researchers at Harvard University have developed a novel approach to generate nonpeptidic ligands to a key receptor involved in pain relief, the mu opioid receptor (MOR). This approach has far-reaching implications for the discovery of next-generation therapeutics for the treatment of pain. The peptidomimetic mu receptor ligands generated as a result of this synthetic platform are lead compounds for the treatment of pain. The market for pain therapeutics is very large. In one example, there are 45 million Americans that suffer from chronic headaches, while nearly 6 million reported case of chest pain.");
+		//process("Although peptides have shown some promise in clinical trials as therapeutic agents, their success has largely been limited by several factors, including rapid degradation by peptidases, poor cell permeability, and a lack of binding specificity resulting from conformational inflexibility. Science has overcome these limitations with the advance of peptidomimetics--a system for the production of modified chemical compounds capable of mimicking the structural and or functional properties of peptides. A fertile ground for such efforts lies in the discovery of ligands for nervous system receptors that mediate the sensation of pain. Researchers at Harvard University have developed a novel approach to generate nonpeptidic ligands to a key receptor involved in pain relief, the mu opioid receptor (MOR). This approach has far-reaching implications for the discovery of next-generation therapeutics for the treatment of pain. The peptidomimetic mu receptor ligands generated as a result of this synthetic platform are lead compounds for the treatment of pain. The market for pain therapeutics is very large. In one example, there are 45 million Americans that suffer from chronic headaches, while nearly 6 million reported case of chest pain. For more information, please contact Daniel Nadis.");
+		process("Our company, Occams Resources, does cool stuff. For more information, please contact Daniel Nadis. Or, you can stop by the office, located at 59 Elm Street, New Haven, Connecticut.");
+		//process("Pierre Vinken has developed an innovative new approach to synthesizing RNA-623, a major breakthrough for the medical field. This method provides a more efficient solution than previous methods, and creates the substance quickly and effectively. 55 million Americans could benefit from this, and it has incredible promise. However, this method has certain limitations, as there is a maximum amount of substance that can be produced. Nevertheless, such a product has unlimited applications in the field of medicine.");
 	}
 	
-	public static void categorize(String text)
+	public static void process(String text)
 	{
+		InputStream modelPerIn = null, modelTokIn = null;
+		try {
+			modelTokIn = new FileInputStream("models/en-token.bin");
+			TokenizerModel tmodel = new TokenizerModel(modelTokIn);
+			TokenNameFinderModel[] nmodels = {
+					new TokenNameFinderModel(new FileInputStream("models/en-ner-person.bin")),
+					new TokenNameFinderModel(new FileInputStream("models/en-ner-location.bin")),
+					new TokenNameFinderModel(new FileInputStream("models/en-ner-organization.bin"))};
+			NameFinderME nameFinder[] = new NameFinderME[3];
+			Tokenizer tokenizer = new TokenizerME(tmodel);
+			String[] tokens = tokenizer.tokenize(text);
+			final String[] label = {"Names" , "Locations", "Organizations"};
+			for(int a=0; a<3; a++)
+			{
+				nameFinder[a] = new NameFinderME(nmodels[a]);
+				Span nameSpans[] = nameFinder[a].find(tokens);
+				nameFinder[a].clearAdaptiveData();
+				
+				System.out.println(label[a] + " detected:");
+				for(Span s : nameSpans)
+				{
+					String[] name = Arrays.copyOfRange(tokens, s.getStart(), s.getEnd());
+					StringBuilder builder = new StringBuilder();
+					for(String n : name) {
+					    builder.append(n + " ");
+					}
+					System.out.println(builder.toString().trim());
+				}
+			}
+		}
+		catch (Exception e) {
+		  e.printStackTrace();
+		}
+		finally {
+		  if (modelTokIn != null) {
+		    try {
+		      modelTokIn.close();
+		    }
+		    catch (Exception e) {
+		    }
+		  }
+		  if (modelPerIn != null) {
+			    try {
+			      modelPerIn.close();
+			    }
+			    catch (Exception e) {
+			    }
+		  }
+		}
+
+		
 		String sentences[] = {};
 		DocumentCategorizerME classificationME = null;
 		try {
@@ -57,7 +118,7 @@ public class VOICEParser
 		int inIndex = classificationME.getIndex("innovation");
 		int chIndex = classificationME.getIndex("challenge");
 		int apIndex = classificationME.getIndex("application");
-	
+
 		for(int a = 0; a < sentences.length; a++)
 		{
 			sents[a] = new Sentence(sentences[a],
@@ -87,6 +148,11 @@ public class VOICEParser
 					max = score;
 					best = a;
 				}
+			}
+			if(best == -1)
+			{
+				System.out.println("Couldn't figure out something for " + cat);
+				continue;
 			}
 			
 			System.out.println("The choice for " + cat + ":");

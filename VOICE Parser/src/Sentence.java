@@ -1,4 +1,3 @@
-
 public class Sentence {
 	public String content;
 	public double[] vals;
