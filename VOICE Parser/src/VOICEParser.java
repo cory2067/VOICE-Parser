@@ -15,7 +15,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Arrays;
 
 import javax.swing.JButton;
@@ -44,9 +43,7 @@ public class VOICEParser
 						"situation", "limited", "although", "however"},
 			APPLICATION = {"targeted to", "application", "can be used", "potential products", 
 						"differentiate", "treatment"};
-										
-	private static final String[] CATEGORIES = {"opportunity", "features", "innovation", "challenge", "application"};
-	
+											
 	private static TokenizerModel tmodel;
 	private static SentenceModel smodel;
 	private static DoccatModel dmodel;
