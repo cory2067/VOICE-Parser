@@ -9,23 +9,21 @@ import opennlp.tools.tokenize.TokenizerME;
 import opennlp.tools.tokenize.TokenizerModel;
 import opennlp.tools.util.Span;
 
-import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 
-import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
-import javax.swing.SpringLayout;
 
 /** 
  * @author Cory Lynch
@@ -202,11 +200,22 @@ public class VOICEParser
 			
 			sents[a].vals[opIndex] += bias(sentences[a], OPPORTUNITY);
 			sents[a].vals[feIndex] += bias(sentences[a], FEATURES);
-			sents[a].vals[inIndex] += bias(sentences[a], INNOVATION);
+		 	sents[a].vals[inIndex] += bias(sentences[a], INNOVATION);
 			sents[a].vals[chIndex] += bias(sentences[a], CHALLENGE);
 			sents[a].vals[apIndex] += bias(sentences[a], APPLICATION);
 		}
+			
+		SortSent s[] = new SortSent[sents.length * 5];
+		for(int a = 0; a < sents.length; a++)
+			for(int b = 0; b < 5; b++)
+			{
+				s[a*5+b] = new SortSent(a, b, sents[a].vals[b]);
+			}
 		
+		Arrays.parallelSort(s);		
+		for(SortSent q : s)
+			System.out.println(q.weight);
+			
 		String[] categories = {"opportunity", "features", "innovation", "challenge", "application"};
 		
 		for(int q=0; q<categories.length; q++)
