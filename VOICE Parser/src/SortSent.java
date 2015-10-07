@@ -14,9 +14,9 @@ public class SortSent implements Comparable<SortSent>
 	public int compareTo(SortSent b)
 	{
 		if(this.weight > b.weight)
-			return 1;
-		if(b.weight < this.weight)
 			return -1;
+		if(this.weight < b.weight)
+			return 1;
 		return 0;
 	}
 }

@@ -30,7 +30,8 @@ import javax.swing.JTextArea;
  */
 public class VOICEParser 
 {
-	private static final double keywordBiasFactor = 0.08;
+	private static final double KEYWORD_BIAS_FACTOR = 0.08;
+	private static final double CONFIDENCE_THRESHOLD = 0.30;
 	
 	private static final String[] 
 			OPPORTUNITY = {"$", "dollars", "million", "market"},
@@ -43,10 +44,9 @@ public class VOICEParser
 						"situation", "limited", "although", "however"},
 			APPLICATION = {"targeted to", "application", "can be used", "potential products", 
 						"differentiate", "treatment"};
+										
+	private static final String[] CATEGORIES = {"opportunity", "features", "innovation", "challenge", "application"};
 	
-	private static final String[] OUTPUT_LABELS = {"Market Opportunity", "Key Features",
-							"Our Innovation", "Scientific Challenge - Unmet Needs", "Projected Application"};
-												
 	private static TokenizerModel tmodel;
 	private static SentenceModel smodel;
 	private static DoccatModel dmodel;
@@ -192,6 +192,14 @@ public class VOICEParser
 		int inIndex = classificationME.getIndex("innovation");
 		int chIndex = classificationME.getIndex("challenge");
 		int apIndex = classificationME.getIndex("application");
+		
+		String[] labels = new String[5];
+		labels[opIndex] = "Market Opportunity";
+		labels[feIndex] = "Key Features";
+		labels[inIndex] = "Our Innovation";
+		labels[chIndex] = "Scientific Challenge";
+		labels[apIndex] = "Projected Application";
+			
 
 		for(int a = 0; a < sentences.length; a++)
 		{
@@ -211,40 +219,26 @@ public class VOICEParser
 			{
 				s[a*5+b] = new SortSent(a, b, sents[a].vals[b]);
 			}
+		Arrays.sort(s);		
 		
-		Arrays.parallelSort(s);		
+		boolean cats[] = new boolean[5];
+		int found = 0;
 		for(SortSent q : s)
-			System.out.println(q.weight);
-			
-		String[] categories = {"opportunity", "features", "innovation", "challenge", "application"};
-		
-		for(int q=0; q<categories.length; q++)
 		{
-			String cat = categories[q];
-			double max = -1.0;
-			int best = -1;
-			for(int a = 0; a < sents.length; a++)
-			{
-				if(sents[a] == null)
-					continue;
-				
-				double score = sents[a].vals[classificationME.getIndex(cat)];
-				if(score > max)
-				{
-					max = score;
-					best = a;
-				}
-			}
-			if(best == -1)
-			{
-				System.out.println("Couldn't figure out something for " + cat);
-				continue;
-			}
+			if(q.weight < CONFIDENCE_THRESHOLD)
+				break;
 			
-			output.append(OUTPUT_LABELS[q] + ":\n");
-			output.append(sents[best].content + "\n");
-			output.append("Confidence: " + (int)(max*100) + "%\n\n");
-			sents[best] = null;
+			if(!cats[q.cindex] && !sents[q.sindex].content.equals("used"))
+			{
+				output.append(labels[q.cindex] + ":\n");
+				output.append(sents[q.sindex].content + "\n");
+				output.append("Confidence: " + (int)(q.weight*100) + "%\n\n");
+				sents[q.sindex].content = "used";
+				cats[q.cindex] = true;
+				found++;
+			}
+			if(found == 5)
+				break;
 		}
 		
 		return output.toString();
@@ -255,6 +249,6 @@ public class VOICEParser
 		double counter = 0.0;
 		for(String word : words)
 			counter += s.contains(word) ? 1 : 0;
-		return keywordBiasFactor * counter;
+		return KEYWORD_BIAS_FACTOR * counter;
 	}
 }
